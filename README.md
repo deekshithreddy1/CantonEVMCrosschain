@@ -2,7 +2,7 @@
 
 InterWeave is a network-neutral control plane for durable, attested workflows between Canton and EVM networks. It does **not** claim cross-network atomicity.
 
-This repository currently contains the Phase 0–1 foundation requested by `Prompt.txt`: researched architecture and security boundaries, domain types and invariants, ADRs, an expandable monorepo skeleton, local-development strategy, and acceptance criteria.
+This repository contains the Phase 0–1 foundation through the Phase 11 Attestation Protocol. Attestation v1 binds source observation, logical asset, parties, destination, operation, policy, validity, and nonce into canonical domain-separated bytes before signing.
 
 ## Verify
 

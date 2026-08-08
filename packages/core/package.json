@@ -10,6 +10,6 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "check": "tsc -p tsconfig.json --noEmit",
-    "test": "npm run build && node dist/invariants.test.js"
+    "test": "npm run build && node --test dist/*.test.js"
   }
 }
