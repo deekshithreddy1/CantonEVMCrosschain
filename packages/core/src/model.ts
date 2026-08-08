@@ -69,10 +69,18 @@ export interface AssetRepresentation {
   enabled: boolean;
 }
 
+export interface CapabilityEvidence {
+  capability: AssetCapability;
+  source: string;
+  observedAt: IsoTimestamp;
+  evidence: Readonly<Record<string, string>>;
+}
+
 export type NetworkIdentityLocator =
   | { kind: "EVM"; address: string }
   | { kind: "CANTON"; party: string };
 export interface NetworkIdentity {
+  bindingId: InterWeaveId<"BINDING">;
   networkId: NetworkId;
   locator: NetworkIdentityLocator;
   proofMethod: string;
@@ -83,7 +91,7 @@ export interface NetworkIdentity {
 export interface Identity { id: IdentityId; displayName?: string; bindings: readonly NetworkIdentity[]; createdAt: IsoTimestamp }
 
 export interface Policy { id: PolicyId; version: string; status: "DRAFT" | "ACTIVE" | "RETIRED"; documentHash: string; createdAt: IsoTimestamp }
-export interface PolicyDecision { outcome: "ALLOW" | "DENY" | "REQUIRES_APPROVAL"; reasonCodes: readonly string[]; policyId: PolicyId; policyVersion: string; decidedAt: IsoTimestamp }
+export interface PolicyDecision { outcome: "ALLOW" | "DENY" | "REQUIRES_APPROVAL"; reasonCodes: readonly string[]; policyId: PolicyId; policyVersion: string; decidedAt: IsoTimestamp; matchedRuleIds?: readonly string[] }
 
 export type TransactionStatus = "PREPARING" | "SUBMITTED" | "CONFIRMED" | "FINALIZED" | "FAILED" | "UNCERTAIN";
 export interface FinalityEvidence { policy: FinalityPolicy; observedPosition: string; providerObservations: readonly string[]; observedAt: IsoTimestamp }
@@ -97,7 +105,7 @@ export interface StateTransition { from: BridgeState | null; to: BridgeState; oc
 export interface BridgeOperation { id: BridgeOperationId; idempotencyKey: string; assetId: AssetId; sourceNetworkId: NetworkId; destinationNetworkId: NetworkId; sender: IdentityId; receiver: IdentityId; amount: AtomicAmount; state: BridgeState; policyDecision?: PolicyDecision; transitions: readonly StateTransition[]; expiresAt: IsoTimestamp; createdAt: IsoTimestamp }
 
 export interface ValidatorSignature { validatorId: string; algorithm: string; publicKeyId: string; signature: string; signedAt: IsoTimestamp }
-export interface Attestation { version: string; id: AttestationId; operationId: BridgeOperationId; sourceNetworkId: NetworkId; sourceTransactionId: string; sourceEventPosition: string; eventType: string; assetId: AssetId; amount: AtomicAmount; sender: IdentityId; receiver: IdentityId; destinationNetworkId: NetworkId; nonce: string; observedStatePosition: string; observedAt: IsoTimestamp; validFrom: IsoTimestamp; expiresAt: IsoTimestamp; policyVersion: string; signatures: readonly ValidatorSignature[] }
+export interface Attestation { version: string; id: AttestationId; operationId: BridgeOperationId; sourceNetworkType: NetworkType; sourceNetworkId: NetworkId; sourceTransactionId: string; sourceEventPosition: string; eventType: string; assetId: AssetId; amount: AtomicAmount; sender: IdentityId; receiver: IdentityId; destinationNetworkType: NetworkType; destinationNetworkId: NetworkId; nonce: string; observedStatePosition: string; observedAt: IsoTimestamp; validFrom: IsoTimestamp; expiresAt: IsoTimestamp; policyVersion: string; signatures: readonly ValidatorSignature[] }
 
 export interface SettlementLeg { id: string; networkId: NetworkId; assetId: AssetId; sender: IdentityId; receiver: IdentityId; amount: AtomicAmount; status: "PENDING" | "RESERVED" | "FINALIZED" | "FAILED" | "COMPENSATED" }
 export interface Settlement { id: SettlementId; mode: "NETWORK_NATIVE_ATOMIC" | "CROSS_NETWORK_SAGA"; legs: readonly SettlementLeg[]; status: "CREATED" | "IN_PROGRESS" | "COMPLETED" | "FAILED" | "EXPIRED" | "MANUAL_REVIEW"; createdAt: IsoTimestamp }
