@@ -1,0 +1,15 @@
+{
+  "name": "interweave",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Canton and EVM institutional interoperability control plane",
+  "type": "module",
+  "workspaces": ["packages/*", "apps/*"],
+  "scripts": {
+    "build": "npm run build --workspace @interweave/core",
+    "check": "npm run check --workspace @interweave/core",
+    "test": "npm run test --workspace @interweave/core"
+  },
+  "engines": { "node": ">=22" },
+  "devDependencies": { "typescript": "5.9.3" }
+}
