@@ -4,12 +4,27 @@
   "private": true,
   "description": "Canton and EVM institutional interoperability control plane",
   "type": "module",
-  "workspaces": ["packages/*", "apps/*"],
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
   "scripts": {
     "build": "npm run build --workspace @interweave/core",
-    "check": "npm run check --workspace @interweave/core",
-    "test": "npm run test --workspace @interweave/core"
+    "check": "npm run check --workspace @interweave/core && npm run contracts:check && npm run daml:check",
+    "test": "npm run test --workspace @interweave/core && npm run contracts:test && npm run daml:test",
+    "contracts:check": "node scripts/compile-contracts.mjs",
+    "contracts:test": "node --test contracts/ethereum/test/gateway.test.mjs",
+    "daml:check": "node scripts/run-daml.mjs build",
+    "daml:test": "node scripts/run-daml.mjs test"
   },
-  "engines": { "node": ">=22" },
-  "devDependencies": { "typescript": "5.9.3" }
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "@openzeppelin/contracts": "5.6.1",
+    "ethers": "6.17.0",
+    "ganache": "7.9.2",
+    "solc": "0.8.36",
+    "typescript": "5.9.3"
+  }
 }

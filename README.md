@@ -2,7 +2,7 @@
 
 InterWeave is a network-neutral control plane for durable, attested workflows between Canton and EVM networks. It does **not** claim cross-network atomicity.
 
-This repository contains the Phase 0–1 foundation through the Phase 11 Attestation Protocol. Attestation v1 binds source observation, logical asset, parties, destination, operation, policy, validity, and nonce into canonical domain-separated bytes before signing.
+This repository contains the Phase 0–1 foundation through the Phase 18 round-trip orchestration slices. Durable coordinators cover evidenced Canton→EVM lock/mint and EVM→Canton burn/release, independent threshold attestations, replay protection, finality, and reconciliation. Live two-network deployment remains explicitly incomplete.
 
 ## Verify
 

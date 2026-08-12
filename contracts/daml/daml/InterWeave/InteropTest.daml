@@ -1,0 +1,58 @@
+module InterWeave.InteropTest where
+
+import Daml.Script
+import DA.Time (addRelTime, seconds)
+import InterWeave.Interop
+
+setup : Script (Party, Party, Party, Party, Time)
+setup = script do
+  owner <- allocateParty "Alice"
+  receiver <- allocateParty "Bob"
+  operator <- allocateParty "Operator"
+  validator <- allocateParty "Validator"
+  now <- getTime
+  pure (owner, receiver, operator, validator, now)
+
+testHolding : TokenHoldingRef
+testHolding = TokenHoldingRef CIP0056 "instrument-rwa-1" "holding-1"
+
+createIntent owner receiver operator now operationId assetId destination = submitMulti [owner, operator] [] do
+  createCmd BridgeIntent with operationId; assetId; holding = testHolding; amount = 100; owner; receiver; operator; destinationNetworkId = destination; expiresAt = addRelTime now (seconds 3600)
+
+createAttestation validator operator receiver now operationId assetId destination amount expires = submit validator do
+  createCmd AttestationRecord with attestationId = "att-1"; operationId; assetId; amount; receiver; destinationNetworkId = destination; digest = "sha256:abc"; validFrom = now; expiresAt = expires; thresholdVerified = True; validatorOperator = validator; workflowOperator = operator
+
+testLegitimateRelease : Script ()
+testLegitimateRelease = script do
+  (owner, receiver, operator, validator, now) <- setup
+  intent <- createIntent owner receiver operator now "op-1" "IW:ASSET:rwa" "IW:NETWORK:canton"
+  locked <- submit owner do exerciseCmd intent Lock
+  attestation <- createAttestation validator operator receiver now "op-1" "IW:ASSET:rwa" "IW:NETWORK:canton" 100 (addRelTime now (seconds 1800))
+  authorization <- submit operator do exerciseCmd locked AuthorizeRelease with attestationCid = attestation
+  released <- submit owner do exerciseCmd authorization ExecuteRelease
+  submitMustFail owner do exerciseCmd authorization ExecuteRelease
+  visible <- queryContractId receiver released
+  assert (visible /= None)
+
+testUnauthorizedAndMismatchedEvidence : Script ()
+testUnauthorizedAndMismatchedEvidence = script do
+  (owner, receiver, operator, validator, now) <- setup
+  attacker <- allocateParty "Mallory"
+  intent <- createIntent owner receiver operator now "op-2" "IW:ASSET:rwa" "IW:NETWORK:canton"
+  submitMustFail attacker do exerciseCmd intent Lock
+  locked <- submit owner do exerciseCmd intent Lock
+  wrongAsset <- createAttestation validator operator receiver now "op-2" "IW:ASSET:wrong" "IW:NETWORK:canton" 100 (addRelTime now (seconds 1800))
+  submitMustFail operator do exerciseCmd locked AuthorizeRelease with attestationCid = wrongAsset
+  wrongDestination <- createAttestation validator operator receiver now "op-2" "IW:ASSET:rwa" "IW:NETWORK:wrong" 100 (addRelTime now (seconds 1800))
+  submitMustFail operator do exerciseCmd locked AuthorizeRelease with attestationCid = wrongDestination
+
+testExpiryAndPrivacy : Script ()
+testExpiryAndPrivacy = script do
+  (owner, receiver, operator, validator, now) <- setup
+  outsider <- allocateParty "Outsider"
+  intent <- createIntent owner receiver operator now "op-3" "IW:ASSET:rwa" "IW:NETWORK:canton"
+  locked <- submit owner do exerciseCmd intent Lock
+  expired <- createAttestation validator operator receiver (addRelTime now (seconds (-20))) "op-3" "IW:ASSET:rwa" "IW:NETWORK:canton" 100 (addRelTime now (seconds (-10)))
+  submitMustFail operator do exerciseCmd locked AuthorizeRelease with attestationCid = expired
+  outsiderView <- query @LockedAsset outsider
+  assert (outsiderView == [])

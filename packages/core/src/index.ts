@@ -11,3 +11,8 @@ export * from "./transaction-engine.js";
 export * from "./idempotency.js";
 export * from "./domain-events.js";
 export * from "./attestation-protocol.js";
+export * from "./validator-service.js";
+export * from "./threshold-attestation.js";
+export * from "./finality-service.js";
+export * from "./lock-mint-coordinator.js";
+export * from "./burn-release-coordinator.js";

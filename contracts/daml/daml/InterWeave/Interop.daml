@@ -1,0 +1,140 @@
+module InterWeave.Interop where
+
+data TokenStandard = CIP0056 | CIP0112
+  deriving (Eq, Show)
+
+data TokenHoldingRef = TokenHoldingRef
+  with
+    standard : TokenStandard
+    instrumentId : Text
+    holdingId : Text
+  deriving (Eq, Show)
+
+template InteropRegistry
+  with
+    operator : Party
+    governance : Party
+    supportedAssets : [Text]
+    supportedDestinations : [Text]
+  where
+    signatory governance
+    observer operator
+
+    nonconsuming choice ValidateRoute : ()
+      with assetId : Text; destinationNetworkId : Text
+      controller operator
+      do
+        assertMsg "asset is not registered for interoperability" (assetId `elem` supportedAssets)
+        assertMsg "destination network is not registered" (destinationNetworkId `elem` supportedDestinations)
+
+template BridgeIntent
+  with
+    operationId : Text
+    assetId : Text
+    holding : TokenHoldingRef
+    amount : Int
+    owner : Party
+    receiver : Party
+    operator : Party
+    destinationNetworkId : Text
+    expiresAt : Time
+  where
+    signatory owner, operator
+    observer receiver
+    ensure amount > 0 && operationId /= "" && assetId /= ""
+
+    choice Lock : ContractId LockedAsset
+      controller owner
+      do
+        now <- getTime
+        assertMsg "bridge intent has expired" (now < expiresAt)
+        create LockedAsset with operationId; assetId; holding; amount; owner; receiver; operator; destinationNetworkId; lockedAt = now
+
+template LockedAsset
+  with
+    operationId : Text
+    assetId : Text
+    holding : TokenHoldingRef
+    amount : Int
+    owner : Party
+    receiver : Party
+    operator : Party
+    destinationNetworkId : Text
+    lockedAt : Time
+  where
+    signatory owner, operator
+    observer receiver
+
+    choice AuthorizeRelease : ContractId ReleaseAuthorization
+      with attestationCid : ContractId AttestationRecord
+      controller operator
+      do
+        attestation <- fetch attestationCid
+        now <- getTime
+        assertMsg "attestation operation mismatch" (attestation.operationId == operationId)
+        assertMsg "attestation asset mismatch" (attestation.assetId == assetId)
+        assertMsg "attestation amount mismatch" (attestation.amount == amount)
+        assertMsg "attestation receiver mismatch" (attestation.receiver == receiver)
+        assertMsg "attestation destination mismatch" (attestation.destinationNetworkId == destinationNetworkId)
+        assertMsg "attestation is not yet valid" (attestation.validFrom <= now)
+        assertMsg "attestation has expired" (now < attestation.expiresAt)
+        assertMsg "attestation threshold was not verified" attestation.thresholdVerified
+        create ReleaseAuthorization with operationId; assetId; holding; amount; owner; receiver; operator; destinationNetworkId; attestationDigest = attestation.digest; expiresAt = attestation.expiresAt
+
+template AttestationRecord
+  with
+    attestationId : Text
+    operationId : Text
+    assetId : Text
+    amount : Int
+    receiver : Party
+    destinationNetworkId : Text
+    digest : Text
+    validFrom : Time
+    expiresAt : Time
+    thresholdVerified : Bool
+    validatorOperator : Party
+    workflowOperator : Party
+  where
+    signatory validatorOperator
+    observer workflowOperator, receiver
+    ensure attestationId /= "" && digest /= "" && amount > 0 && validFrom < expiresAt
+
+template ReleaseAuthorization
+  with
+    operationId : Text
+    assetId : Text
+    holding : TokenHoldingRef
+    amount : Int
+    owner : Party
+    receiver : Party
+    operator : Party
+    destinationNetworkId : Text
+    attestationDigest : Text
+    expiresAt : Time
+  where
+    signatory owner, operator
+    observer receiver
+
+    choice ExecuteRelease : ContractId ReleasedAsset
+      controller owner
+      do
+        now <- getTime
+        assertMsg "release authorization has expired" (now < expiresAt)
+        create ReleasedAsset with operationId; assetId; holding; amount; owner; receiver; operator; destinationNetworkId; attestationDigest; releasedAt = now
+
+template ReleasedAsset
+  with
+    operationId : Text
+    assetId : Text
+    holding : TokenHoldingRef
+    amount : Int
+    owner : Party
+    receiver : Party
+    operator : Party
+    destinationNetworkId : Text
+    attestationDigest : Text
+    releasedAt : Time
+  where
+    signatory owner, operator
+    observer receiver
