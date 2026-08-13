@@ -7,3 +7,4 @@ coverage/
 .terraform/
 *.tfstate*
 contracts/daml/.daml/
+Prompt.txt
