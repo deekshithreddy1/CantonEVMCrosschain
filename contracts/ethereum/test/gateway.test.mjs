@@ -40,10 +40,10 @@ test("gateway requires threshold signatures, separates effects, prevents replay,
 
   const unlockedAdmin = await provider.getSigner(admin.address);
   await (await underlying.connect(unlockedAdmin).mint(await gateway.getAddress(), amount)).wait();
-  const releaseOperation = id("IW:BRIDGE:release-1"); const releaseDigest = await verifier.executionDigest(attestationDigest, releaseOperation, 2, assetId, receiver.address, amount, validFrom, expiresAt);
+  const releaseOperation = id("IW:BRIDGE:release-1"); const releaseDigest = await verifier.executionDigest(attestationDigest, releaseOperation, 2, assetId, receiver.address, burnAmount, validFrom, expiresAt);
   const releaseSignatures = [validatorOne, validatorTwo].map((wallet) => ({ address: wallet.address, signature: wallet.signingKey.sign(releaseDigest).serialized })).sort((a, b) => BigInt(a.address) < BigInt(b.address) ? -1 : 1).map((item) => item.signature);
-  await (await gateway.executeRelease(attestationDigest, releaseOperation, assetId, receiver.address, amount, validFrom, expiresAt, releaseSignatures)).wait();
-  assert.equal(await underlying.balanceOf(receiver.address), amount); assert.equal(await gateway.isOperationProcessed(releaseOperation, 2), true);
+  await (await gateway.executeRelease(attestationDigest, releaseOperation, assetId, receiver.address, burnAmount, validFrom, expiresAt, releaseSignatures)).wait();
+  assert.equal(await underlying.balanceOf(receiver.address), burnAmount); assert.equal(await underlying.balanceOf(await gateway.getAddress()), amount - burnAmount); assert.equal(await representation.balanceOf(receiver.address), amount - burnAmount); assert.equal(await gateway.isOperationProcessed(releaseOperation, 2), true);
 
   const otherOperation = id("IW:BRIDGE:op-2"); const mintDigest = await verifier.executionDigest(attestationDigest, otherOperation, 1, assetId, receiver.address, amount, validFrom, expiresAt);
   const wrongEffectSignatures = [validatorOne, validatorTwo].map((wallet) => ({ address: wallet.address, signature: wallet.signingKey.sign(mintDigest).serialized })).sort((a, b) => BigInt(a.address) < BigInt(b.address) ? -1 : 1).map((item) => item.signature);

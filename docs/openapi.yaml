@@ -1,0 +1,61 @@
+openapi: 3.1.0
+info:
+  title: InterWeave API
+  version: 1.0.0
+  description: Network-neutral interoperability control-plane API. Cross-network operations are durable sagas, not atomic transactions.
+servers:
+  - url: /v1
+components:
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: { type: string, minLength: 1, maxLength: 256 }
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, requestId]
+          properties:
+            code: { type: string }
+            message: { type: string }
+            requestId: { type: string }
+    WriteBody: { type: object, additionalProperties: true }
+    Success: { type: object, required: [data, requestId], properties: { data: {}, requestId: { type: string } } }
+paths:
+  /networks:
+    get: { operationId: listNetworks, responses: { '200': { description: Networks } } }
+  /assets:
+    post: { operationId: createAsset, parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/WriteBody' } } } }, responses: { '201': { description: Asset created } } }
+  /assets/{id}:
+    get: { operationId: getAsset, parameters: [{ name: id, in: path, required: true, schema: { type: string } }], responses: { '200': { description: Asset } } }
+  /assets/{id}/balances:
+    get: { operationId: getAssetBalances, parameters: [{ name: id, in: path, required: true, schema: { type: string } }], responses: { '200': { description: Balances } } }
+  /identities:
+    post: { operationId: createIdentity, parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Identity created } } }
+  /identities/{id}/bindings:
+    post: { operationId: createIdentityBinding, parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Binding created } } }
+  /transfers:
+    post: { operationId: createTransfer, parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Transfer created } } }
+  /transfers/{id}:
+    get: { operationId: getTransfer, responses: { '200': { description: Transfer } } }
+  /bridge/transfers:
+    post: { operationId: createBridgeTransfer, parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Bridge transfer created } } }
+  /bridge/transfers/{id}:
+    get: { operationId: getBridgeTransfer, responses: { '200': { description: Bridge transfer } } }
+  /settlements:
+    post: { operationId: createSettlement, parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Settlement created } } }
+  /settlements/{id}:
+    get: { operationId: getSettlement, responses: { '200': { description: Settlement } } }
+  /attestations:
+    post: { operationId: requestAttestation, parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Attestation requested } } }
+  /attestations/{id}:
+    get: { operationId: getAttestation, responses: { '200': { description: Attestation } } }
+  /transactions/{id}:
+    get: { operationId: getTransaction, responses: { '200': { description: Transaction } } }
+  /webhooks:
+    post: { operationId: createWebhook, parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Webhook registered } } }
