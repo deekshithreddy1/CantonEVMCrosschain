@@ -1,0 +1,8 @@
+{
+  "name": "sepolia",
+  "environment": "testnet",
+  "chainId": 11155111,
+  "confirmPhrase": "deploy-sepolia",
+  "requiredConfirmations": 12,
+  "allowProduction": false
+}

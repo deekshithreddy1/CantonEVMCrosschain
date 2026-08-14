@@ -26,6 +26,19 @@ components:
             requestId: { type: string }
     WriteBody: { type: object, additionalProperties: true }
     Success: { type: object, required: [data, requestId], properties: { data: {}, requestId: { type: string } } }
+    EmergencyControl:
+      type: object
+      required: [id, kind, selector, status, reason, activatedBy, activatedAt]
+      properties:
+        id: { type: string, pattern: '^IW:EMERGENCY_CONTROL:' }
+        kind: { type: string, enum: [ASSET, SOURCE_NETWORK, DESTINATION_NETWORK, BRIDGE_DIRECTION, MINT, RELEASE, SETTLEMENT] }
+        selector: { type: object, properties: { assetId: { type: string }, sourceNetworkId: { type: string }, destinationNetworkId: { type: string } } }
+        status: { type: string, enum: [ACTIVE, LIFTED] }
+        reason: { type: string }
+        activatedBy: { type: string }
+        activatedAt: { type: string, format: date-time }
+        liftedBy: { type: string }
+        liftedAt: { type: string, format: date-time }
 paths:
   /networks:
     get: { operationId: listNetworks, responses: { '200': { description: Networks } } }
@@ -59,3 +72,13 @@ paths:
     get: { operationId: getTransaction, responses: { '200': { description: Transaction } } }
   /webhooks:
     post: { operationId: createWebhook, parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Webhook registered } } }
+  /emergency-controls:
+    get: { operationId: listEmergencyControls, responses: { '200': { description: Tenant emergency-control status } } }
+    post: { operationId: activateEmergencyControl, parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/EmergencyControl' } } } }, responses: { '201': { description: Emergency control activated } } }
+  /emergency-controls/{id}/lift:
+    post:
+      operationId: liftEmergencyControl
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      responses: { '201': { description: Emergency control lifted } }

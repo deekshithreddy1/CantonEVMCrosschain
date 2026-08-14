@@ -1,0 +1,52 @@
+name: InterWeave CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Install DAML assistant
+        run: |
+          curl -sSL https://get.daml.com/ | sh
+          echo "$HOME/.daml/bin" >> "$GITHUB_PATH"
+      - name: Install JavaScript dependencies
+        run: npm ci
+      - name: Validate local topology and source
+        run: npm run check
+      - name: Validate Digital Asset LocalNet integration configuration
+        run: npm run canton-localnet:check
+      - name: Validate developer documentation coverage
+        run: npm run docs:check
+      - name: Validate fail-closed MVP evidence report
+        run: npm run mvp:check
+      - name: Validate testnet deployment safety policy
+        run: npm run testnet:check
+      - name: Validate fail-closed production readiness gate
+        run: npm run production:check
+      - name: Run Phase 35 golden path
+        run: npm run test:golden-path
+      - name: Run Phase 36 failure injection
+        run: npm run test:failure-injection
+      - name: Run Phase 37 security invariant properties
+        run: npm run test:security-invariants
+      - name: Run regression suite
+        run: npm test

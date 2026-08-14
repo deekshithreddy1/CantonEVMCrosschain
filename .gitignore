@@ -8,3 +8,7 @@ coverage/
 *.tfstate*
 contracts/daml/.daml/
 Prompt.txt
+__pycache__/
+*.pyc
+.local/
+*.tsbuildinfo

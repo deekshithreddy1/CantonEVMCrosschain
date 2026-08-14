@@ -1,0 +1,9 @@
+{
+  "name": "canton-devnet",
+  "environment": "devnet",
+  "confirmPhrase": "deploy-canton-devnet",
+  "networkInfoUrl": "https://docs.dev.global.canton.network.sync.global/info",
+  "requiresSponsoredValidator": true,
+  "requiresVpn": true,
+  "allowProduction": false
+}

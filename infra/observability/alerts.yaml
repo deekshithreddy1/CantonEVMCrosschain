@@ -1,0 +1,24 @@
+groups:
+  - name: interweave-safety
+    rules:
+      - alert: InterWeaveReconciliationMismatch
+        expr: increase(interweave_reconciliation_mismatches_total[5m]) > 0
+        severity: critical
+      - alert: InterWeaveStuckTransactions
+        expr: interweave_transactions_stuck > 0
+        for: 10m
+        severity: high
+      - alert: InterWeaveValidatorDisagreement
+        expr: increase(interweave_validator_disagreements_total[10m]) > 2
+        severity: high
+      - alert: InterWeaveRpcErrorRate
+        expr: rate(interweave_rpc_errors_total[5m]) > 0.1
+        for: 5m
+        severity: warning
+      - alert: InterWeaveCantonApiErrors
+        expr: increase(interweave_canton_api_errors_total[5m]) > 5
+        severity: warning
+      - alert: InterWeaveEventIngestionLag
+        expr: histogram_quantile(0.95, rate(interweave_event_ingestion_lag_bucket[10m])) > 60
+        for: 10m
+        severity: high

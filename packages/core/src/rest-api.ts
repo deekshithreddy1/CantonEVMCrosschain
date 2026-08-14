@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { RegistryError } from "./registry-errors.js";
 
-export type RestOperation = "networks.list" | "assets.create" | "assets.get" | "assets.balance" | "identities.create" | "identities.bind" | "transfers.create" | "transfers.get" | "bridge.create" | "bridge.get" | "settlements.create" | "settlements.get" | "attestations.create" | "attestations.get" | "transactions.get" | "webhooks.create";
+export type RestOperation = "networks.list" | "assets.create" | "assets.get" | "assets.balance" | "identities.create" | "identities.bind" | "transfers.create" | "transfers.get" | "bridge.create" | "bridge.get" | "settlements.create" | "settlements.get" | "attestations.create" | "attestations.get" | "transactions.get" | "webhooks.create" | "emergency.list" | "emergency.create" | "emergency.lift";
 export interface RestApiCommand { operation: RestOperation; path: Readonly<Record<string, string>>; query: Readonly<Record<string, string>>; body?: Readonly<Record<string, unknown>>; idempotencyKey?: string; requestId: string }
 export interface RestApiBackend { execute(command: RestApiCommand): Promise<unknown> }
 export interface ApiErrorBody { error: { code: string; message: string; requestId: string; details?: readonly { field?: string; reason: string }[] } }
@@ -24,6 +24,9 @@ const routes: readonly Route[] = [
   { method: "GET", pattern: /^\/v1\/attestations\/([^/]+)$/, names: ["id"], operation: "attestations.get", write: false },
   { method: "GET", pattern: /^\/v1\/transactions\/([^/]+)$/, names: ["id"], operation: "transactions.get", write: false },
   { method: "POST", pattern: /^\/v1\/webhooks$/, names: [], operation: "webhooks.create", write: true }
+  ,{ method: "GET", pattern: /^\/v1\/emergency-controls$/, names: [], operation: "emergency.list", write: false }
+  ,{ method: "POST", pattern: /^\/v1\/emergency-controls$/, names: [], operation: "emergency.create", write: true }
+  ,{ method: "POST", pattern: /^\/v1\/emergency-controls\/([^/]+)\/lift$/, names: ["id"], operation: "emergency.lift", write: true }
 ];
 
 export class InterWeaveRestApi {

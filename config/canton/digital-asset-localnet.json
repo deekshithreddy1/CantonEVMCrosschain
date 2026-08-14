@@ -1,0 +1,25 @@
+{
+  "repository": "https://github.com/digital-asset/cn-quickstart.git",
+  "commit": "9debe90ba909c6cb69329144a6870624d26cbdc3",
+  "checkout": ".local/cn-quickstart",
+  "quickstartDirectory": ".local/cn-quickstart/quickstart",
+  "appProvider": {
+    "ledgerApiPort": 3901,
+    "adminApiPort": 3902,
+    "validatorApiPort": 3903,
+    "jsonLedgerApiPort": 3975,
+    "readinessUrl": "http://localhost:3903/api/validator/readyz"
+  },
+  "appUser": {
+    "ledgerApiPort": 2901,
+    "validatorApiPort": 2903,
+    "jsonLedgerApiPort": 2975,
+    "readinessUrl": "http://localhost:2903/api/validator/readyz"
+  },
+  "superValidator": {
+    "ledgerApiPort": 4901,
+    "validatorApiPort": 4903,
+    "jsonLedgerApiPort": 4975,
+    "readinessUrl": "http://localhost:4903/api/validator/readyz"
+  }
+}

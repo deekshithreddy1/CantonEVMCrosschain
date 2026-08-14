@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS webhook_endpoints (id text PRIMARY KEY, enabled boolean NOT NULL, events text[] NOT NULL, record jsonb NOT NULL);
+CREATE TABLE IF NOT EXISTS webhook_events (id text PRIMARY KEY, event_type text NOT NULL, event_hash text NOT NULL, record jsonb NOT NULL, created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE IF NOT EXISTS webhook_deliveries (id text PRIMARY KEY, event_id text NOT NULL REFERENCES webhook_events(id), endpoint_id text NOT NULL, attempt integer NOT NULL, status text NOT NULL CHECK(status IN ('PENDING','SUCCEEDED','RETRY_SCHEDULED','DEAD_LETTER')), record jsonb NOT NULL, created_at timestamptz NOT NULL DEFAULT now(), UNIQUE(event_id,endpoint_id,attempt));
+CREATE INDEX IF NOT EXISTS webhook_delivery_retry_idx ON webhook_deliveries(status,created_at);

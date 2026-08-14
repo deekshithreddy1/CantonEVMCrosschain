@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "claim": "MVP_COMPLETE",
+  "criteria": [
+    { "id": "reproducible-local-canton-evm", "status": "PENDING_LIVE_EVIDENCE", "evidence": ["docs/local-development.md", "config/canton/digital-asset-localnet.json"] },
+    { "id": "logical-asset-registered-on-both", "status": "PENDING_LIVE_EVIDENCE", "evidence": ["contracts/daml/daml/InterWeave/Bootstrap.daml", "scripts/local/bootstrap.mjs"] },
+    { "id": "identity-bindings", "status": "EVIDENCED", "evidence": ["packages/core/src/identity-registry.test.ts"] },
+    { "id": "canton-to-evm-lock-mint", "status": "PENDING_LIVE_EVIDENCE", "evidence": ["packages/core/src/lock-mint-coordinator.test.ts", "apps/examples/src/rwa-bridge.ts"] },
+    { "id": "evm-to-canton-burn-release", "status": "PENDING_LIVE_EVIDENCE", "evidence": ["packages/core/src/burn-release-coordinator.test.ts", "packages/core/src/golden-path.integration.test.ts"] },
+    { "id": "independent-validator-attestation", "status": "EVIDENCED", "evidence": ["packages/core/src/validator-service.test.ts", "packages/core/src/threshold-attestation.test.ts"] },
+    { "id": "replay-protection", "status": "EVIDENCED", "evidence": ["contracts/ethereum/test/gateway.test.mjs", "packages/core/src/security-invariants.property.test.ts"] },
+    { "id": "idempotency", "status": "EVIDENCED", "evidence": ["packages/core/src/idempotency.test.ts"] },
+    { "id": "reconciliation", "status": "EVIDENCED", "evidence": ["packages/core/src/reconciliation-service.test.ts", "packages/core/src/supply-invariants.test.ts"] },
+    { "id": "durable-primary-transitions", "status": "EVIDENCED", "evidence": ["packages/core/src/transaction-engine.test.ts", "packages/core/sql/001_transaction_engine.sql"] },
+    { "id": "failure-injection-preserves-invariants", "status": "EVIDENCED", "evidence": ["packages/core/src/failure-injection.integration.test.ts"] },
+    { "id": "typescript-sdk", "status": "EVIDENCED", "evidence": ["packages/sdk-typescript/src/index.test.ts"] },
+    { "id": "rest-api", "status": "EVIDENCED", "evidence": ["packages/core/src/rest-api.test.ts", "docs/openapi.yaml"] },
+    { "id": "signed-webhooks", "status": "EVIDENCED", "evidence": ["packages/core/src/webhook-service.test.ts"] },
+    { "id": "complete-audit-records", "status": "EVIDENCED", "evidence": ["packages/core/src/audit-service.test.ts"] },
+    { "id": "golden-path-in-ci", "status": "EVIDENCED", "evidence": ["packages/core/src/golden-path.integration.test.ts", ".github/workflows/ci.yml"] },
+    { "id": "architecture-and-trust-model", "status": "EVIDENCED", "evidence": ["docs/architecture/overview.md", "docs/architecture/trust-model.md", "docs/security/threat-model.md"] }
+  ]
+}

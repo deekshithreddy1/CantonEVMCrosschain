@@ -9,13 +9,36 @@
     "apps/*"
   ],
   "scripts": {
-    "build": "npm run build --workspace @interweave/core",
-    "check": "npm run check --workspace @interweave/core && npm run contracts:check && npm run daml:check",
-    "test": "npm run test --workspace @interweave/core && npm run contracts:test && npm run daml:test",
+    "build": "npm run build --workspace @interweave/core && npm run build --workspace @interweave/sdk && npm run build --workspace @interweave/cli && npm run build --workspace @interweave/examples",
+    "check": "npm run check --workspace @interweave/core && npm run check --workspace @interweave/sdk && npm run check --workspace @interweave/cli && npm run check --workspace @interweave/examples && npm run python:check && npm run contracts:check && npm run daml:check && npm run local:check",
+    "test": "npm run test --workspace @interweave/core && npm run test --workspace @interweave/sdk && npm run test --workspace @interweave/cli && npm run test --workspace @interweave/examples && npm run python:test && npm run contracts:test && npm run daml:test",
+    "test:golden-path": "npm run build --workspace @interweave/core && node --test packages/core/dist/golden-path.integration.test.js",
+    "test:failure-injection": "npm run build --workspace @interweave/core && node --test packages/core/dist/failure-injection.integration.test.js",
+    "test:security-invariants": "npm run build --workspace @interweave/core && node --test packages/core/dist/security-invariants.property.test.js && npm run contracts:test",
+    "python:check": "python -m compileall -q sdk/python/src sdk/python/tests",
+    "python:test": "python -m unittest discover -s sdk/python/tests -v",
     "contracts:check": "node scripts/compile-contracts.mjs",
     "contracts:test": "node --test contracts/ethereum/test/gateway.test.mjs",
     "daml:check": "node scripts/run-daml.mjs build",
-    "daml:test": "node scripts/run-daml.mjs test"
+    "daml:test": "node scripts/run-daml.mjs test",
+    "local:config": "docker compose config --quiet",
+    "local:check": "npm run local:config && node scripts/local/bootstrap.mjs --check",
+    "local:up": "docker compose up --build",
+    "local:down": "docker compose down"
+    ,"testnet:check": "node --test scripts/testnet/deployment-policy.test.mjs"
+    ,"testnet:preflight": "node scripts/testnet/preflight.mjs"
+    ,"testnet:deploy:evm": "node scripts/testnet/deploy-evm.mjs"
+    ,"production:readiness": "node scripts/production/readiness.mjs"
+    ,"production:assert-ready": "node scripts/production/readiness.mjs --assert-ready"
+    ,"production:check": "node --test scripts/production/readiness.test.mjs"
+    ,"canton-localnet:check": "node --test scripts/canton-localnet/config.test.mjs"
+    ,"canton-localnet:prepare": "node scripts/canton-localnet/prepare.mjs"
+    ,"canton-localnet:health": "node scripts/canton-localnet/health.mjs --require-ready"
+    ,"docs:check": "node --test scripts/docs/developer-docs.test.mjs"
+    ,"examples": "npm run start --workspace @interweave/examples --"
+    ,"mvp:status": "node scripts/mvp/readiness.mjs"
+    ,"mvp:assert-complete": "node scripts/mvp/readiness.mjs --assert-complete"
+    ,"mvp:check": "node --test scripts/mvp/readiness.test.mjs"
   },
   "engines": {
     "node": ">=22"

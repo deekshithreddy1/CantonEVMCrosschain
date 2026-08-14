@@ -91,10 +91,11 @@ InterWeave follows a few non-negotiable rules:
 
 ## Current capabilities
 
-The repository currently implements the engineering foundation through **Phase 25 — Versioned REST API**, including:
+The repository currently implements the engineering foundation through **Phase 43 — Example Applications**, including:
 
 - network, asset, representation, identity, and policy registries;
 - Canton and EVM adapter boundaries;
+- a real Canton Ledger API v2 [gRPC transport](docs/developers/canton-grpc.md) with TLS, JWT metadata, deadlines, party-scoped queries, command submission, and update streams;
 - durable transaction state and restart-safe idempotency;
 - normalized network events and finality evidence;
 - canonical, domain-separated attestations;
@@ -105,7 +106,26 @@ The repository currently implements the engineering foundation through **Phase 2
 - non-atomic Canton–EVM settlement sagas with explicit timeout and compensation behavior;
 - generic evidence-only state attestations;
 - versioned workflows with predefined, permissioned action handlers;
-- a Fetch-compatible `/v1` REST boundary and [OpenAPI specification](docs/openapi.yaml).
+- a Fetch-compatible `/v1` REST boundary and [OpenAPI specification](docs/openapi.yaml);
+- a fully typed `@interweave/sdk` client with resource-oriented methods, automatic idempotency, typed errors, and an explicit low-level metadata surface.
+- equivalent dependency-free Python SDK behavior;
+- an automation-friendly `interweave` CLI with `--json` output;
+- timestamped HMAC-signed webhook delivery with retries, immutable logs, and dead-letter handling.
+- organizations, projects, environments, service accounts, hashed API keys, verified OIDC identities, scoped RBAC, database RLS, and tenant-bound network-operation authorization.
+- custody-neutral signing requests, HSM/MPC adapters, development-only local signing, independent signing policy, and multi-party approval for privileged administration.
+- immutable tenant-scoped, hash-chained audit evidence and full operation reconstruction from one InterWeave transaction ID.
+- OpenTelemetry traces and bounded-cardinality metrics across the complete operation path, plus source-controlled dashboards and safety alerts.
+- a one-command Docker Compose environment with PostgreSQL, NATS, API/coordinator/validator/reconciler services, Canton Sandbox, Anvil, and deterministic local bootstrap.
+- a CI-enforced 18-step golden path proving Canton issuance, lock/mint, threshold verification, burn/release, and exact final backing of the remaining EVM supply.
+- deterministic restart and fault injection across every financial checkpoint, RPC and ledger failures, duplicate delivery, invalid attestations, network partitions, and simulated reorganization recovery.
+- explicit proofs for all 14 bridge security invariants, with seeded property tests over 1,000 supply mutations, 25,000 state-transition attempts, and fuzzed Solidity gateway executions.
+- a full threat model covering compromise, replay, reorganization, upgrade, isolation, availability, detection, prevention, recovery, and residual risk across every trust boundary.
+- tenant-scoped, role-protected, audited emergency controls for assets, networks, directions, mint, release, and settlement, with API-visible status and reconciliation evidence preservation.
+- production-denying Sepolia and Canton DevNet deployment gates, credential-safe preflight checks, immutable public deployment evidence, and a qualification runbook for live two-network testing.
+- a fail-closed production approval manifest, public integrator trust model, operational/incident/upgrade runbooks, provisional SLOs, and explicit external audit and restore-evidence gates.
+- a complete developer guide covering concepts, API usage, examples, failure behavior, trust assumptions, testing, security, and operations without claiming false cross-network atomicity.
+- three runnable reference applications for backed Canton-to-EVM representation, non-atomic RWA/USDC settlement, and attested EVM collateral triggering a permissioned Canton credit workflow.
+- a fail-closed MVP evidence report that distinguishes automated implementation evidence from still-required live Digital Asset Canton LocalNet validation.
 
 The test suite includes replay, restart recovery, expiry, invalid and insufficient signatures, domain separation, finality uncertainty, pause controls, settlement compensation, backing invariants, and reconciliation mismatch scenarios.
 

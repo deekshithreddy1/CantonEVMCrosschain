@@ -1,0 +1,7 @@
+node_modules
+**/dist
+.git
+.env
+contracts/daml/.daml
+Prompt.txt
+**/__pycache__

@@ -1,0 +1,4 @@
+services:
+  splice-onboarding:
+    volumes:
+      - ${INTERWEAVE_DAR_PATH:?Build the InterWeave DAR and set INTERWEAVE_DAR_PATH}:/canton/dars/interweave-canton-0.1.0.dar:ro

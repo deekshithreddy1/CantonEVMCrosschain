@@ -1,0 +1,124 @@
+name: interweave-local
+
+x-interweave-service: &interweave-service
+  build:
+    context: .
+  restart: unless-stopped
+  environment: &interweave-environment
+    DATABASE_URL: postgresql://interweave:interweave@postgres:5432/interweave
+    NATS_URL: nats://nats:4222
+    CANTON_LEDGER_URL: http://canton:7575
+    EVM_RPC_URL: http://anvil:8545
+    INTERWEAVE_ENVIRONMENT: local
+  depends_on:
+    postgres: { condition: service_healthy }
+    nats: { condition: service_healthy }
+    anvil: { condition: service_healthy }
+    canton: { condition: service_healthy }
+  healthcheck:
+    test: ["CMD", "node", "-e", "fetch('http://localhost:'+process.env.PORT+'/healthz').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+    interval: 3s
+    timeout: 3s
+    retries: 20
+
+services:
+  postgres:
+    image: postgres:16.4-bookworm
+    environment:
+      POSTGRES_USER: interweave
+      POSTGRES_PASSWORD: interweave
+      POSTGRES_DB: interweave
+    ports: ["5432:5432"]
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./packages/core/sql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U interweave -d interweave"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  nats:
+    image: nats:2.10.20-alpine
+    command: ["--jetstream", "--store_dir=/data", "--http_port=8222"]
+    ports: ["4222:4222", "8222:8222"]
+    volumes: ["nats-data:/data"]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:8222/healthz"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  anvil:
+    image: ghcr.io/foundry-rs/foundry:v1.3.1
+    entrypoint: ["anvil"]
+    command: ["--host", "0.0.0.0", "--chain-id", "31337", "--accounts", "10", "--balance", "10000"]
+    ports: ["8545:8545"]
+    healthcheck:
+      test: ["CMD", "cast", "block-number", "--rpc-url", "http://localhost:8545"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  canton:
+    image: digitalasset/daml-sdk:2.10.2
+    working_dir: /workspace/contracts/daml
+    command: ["daml", "start", "--open-browser=no", "--sandbox-port=6865", "--json-api-port=7575"]
+    ports: ["6865:6865", "7575:7575"]
+    volumes:
+      - ./contracts/daml:/workspace/contracts/daml
+      - canton-data:/workspace/contracts/daml/.daml
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:7575/livez || exit 1"]
+      interval: 5s
+      timeout: 4s
+      retries: 60
+      start_period: 20s
+
+  api:
+    <<: *interweave-service
+    environment: { <<: *interweave-environment, INTERWEAVE_ROLE: api, PORT: 8080 }
+    ports: ["8080:8080"]
+
+  coordinator:
+    <<: *interweave-service
+    environment: { <<: *interweave-environment, INTERWEAVE_ROLE: coordinator, PORT: 8081 }
+
+  validator-1:
+    <<: *interweave-service
+    environment: { <<: *interweave-environment, INTERWEAVE_ROLE: validator, INSTANCE_ID: validator-1, PORT: 8082 }
+
+  validator-2:
+    <<: *interweave-service
+    environment: { <<: *interweave-environment, INTERWEAVE_ROLE: validator, INSTANCE_ID: validator-2, PORT: 8083 }
+
+  validator-3:
+    <<: *interweave-service
+    environment: { <<: *interweave-environment, INTERWEAVE_ROLE: validator, INSTANCE_ID: validator-3, PORT: 8084 }
+
+  reconciler:
+    <<: *interweave-service
+    environment: { <<: *interweave-environment, INTERWEAVE_ROLE: reconciler, PORT: 8085 }
+
+  bootstrap:
+    build: { context: . }
+    restart: "no"
+    user: root
+    command: ["node", "scripts/local/bootstrap.mjs"]
+    environment:
+      <<: *interweave-environment
+      BOOTSTRAP_OUTPUT: /state/bootstrap.json
+    volumes: ["bootstrap-state:/state"]
+    depends_on:
+      api: { condition: service_healthy }
+      coordinator: { condition: service_healthy }
+      validator-1: { condition: service_healthy }
+      validator-2: { condition: service_healthy }
+      validator-3: { condition: service_healthy }
+      reconciler: { condition: service_healthy }
+
+volumes:
+  postgres-data:
+  nats-data:
+  canton-data:
+  bootstrap-state:

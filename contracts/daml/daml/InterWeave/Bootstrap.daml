@@ -1,0 +1,34 @@
+module InterWeave.Bootstrap where
+
+import Daml.Script
+import InterWeave.Interop
+
+template LocalTestAsset
+  with
+    issuer : Party
+    owner : Party
+    assetId : Text
+    amount : Int
+  where
+    signatory issuer
+    observer owner
+    ensure amount > 0
+
+setup : Script ()
+setup = script do
+  operator <- allocatePartyWithHint "InterWeaveOperator" (PartyIdHint "InterWeaveOperator")
+  governance <- allocatePartyWithHint "InterWeaveGovernance" (PartyIdHint "InterWeaveGovernance")
+  alice <- allocatePartyWithHint "Alice" (PartyIdHint "Alice")
+  submit governance do
+    createCmd InteropRegistry with
+      operator
+      governance
+      supportedAssets = ["INTERWEAVE_LOCAL_RWA_V1"]
+      supportedDestinations = ["EVM:31337"]
+  submit governance do
+    createCmd LocalTestAsset with
+      issuer = governance
+      owner = alice
+      assetId = "INTERWEAVE_LOCAL_RWA_V1"
+      amount = 1000
+  pure ()

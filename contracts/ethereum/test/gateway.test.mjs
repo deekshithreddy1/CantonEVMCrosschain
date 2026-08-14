@@ -69,3 +69,23 @@ test("verifier rejects insufficient, duplicate, disabled, and wrong-chain/domain
   const sorted = [{ address: v1.address, signature: sig1 }, { address: v2.address, signature: sig2 }].sort((a, b) => BigInt(a.address) < BigInt(b.address) ? -1 : 1);
   await assert.rejects(() => verifier.verify(...values, sorted.map((item) => item.signature)));
 });
+
+test("fuzz: unique operations mint exact amounts once and all replay attempts revert", async () => {
+  const local = ganache.provider({ logging: { quiet: true }, wallet: { totalAccounts: 6 }, chain: { chainId: 31337 } });
+  const provider = new BrowserProvider(local); const accounts = local.getInitialAccounts(); const wallets = Object.values(accounts).map((account) => new Wallet(account.secretKey, provider));
+  const [admin, validatorAdmin, registryAdmin, pauser, receiver, v1] = wallets; const deployer = new NonceManager(admin);
+  const verifier = await deploy(deployer, "contracts/ethereum/AttestationVerifier.sol", "AttestationVerifier", [admin.address, validatorAdmin.address, [v1.address], 1]);
+  const registry = await deploy(deployer, "contracts/ethereum/InterWeaveAssetRegistry.sol", "InterWeaveAssetRegistry", [admin.address, registryAdmin.address]);
+  const gateway = await deploy(deployer, "contracts/ethereum/InterWeaveGateway.sol", "InterWeaveGateway", [admin.address, pauser.address, await verifier.getAddress(), await registry.getAddress()]);
+  const representation = await deploy(deployer, "contracts/ethereum/InterWeaveRepresentation.sol", "InterWeaveRepresentation", ["Fuzz RWA", "fRWA", 18, admin.address, await gateway.getAddress()]);
+  const assetId = id("IW:ASSET:fuzz"); await (await registry.connect(registryAdmin).configure(assetId, await representation.getAddress(), "0x0000000000000000000000000000000000000000", true)).wait();
+  const caller = await provider.getSigner(admin.address); const executableGateway = gateway.connect(caller);
+  let seed = 0x12345678, expected = 0n; const next = () => (seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0);
+  for (let index = 0; index < 16; index++) {
+    const amount = BigInt((next() % 1_000_000) + 1), operationId = id(`IW:BRIDGE:fuzz-${index}`), attestation = id(`attestation-${next()}`), expires = 281474976710655n;
+    const digest = await verifier.executionDigest(attestation, operationId, 1, assetId, receiver.address, amount, 0, expires); const signature = v1.signingKey.sign(digest).serialized;
+    await (await executableGateway.executeMint(attestation, operationId, assetId, receiver.address, amount, 0, expires, [signature])).wait(); expected += amount;
+    await assert.rejects(() => executableGateway.executeMint(attestation, operationId, assetId, receiver.address, amount, 0, expires, [signature]));
+    assert.equal(await representation.balanceOf(receiver.address), expected);
+  }
+});

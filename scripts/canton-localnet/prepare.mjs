@@ -1,0 +1,13 @@
+import { access, readFile } from "node:fs/promises";
+import { spawnSync } from "node:child_process";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"../.."),config=JSON.parse(await readFile(path.join(root,"config/canton/digital-asset-localnet.json"),"utf8")),checkout=path.join(root,config.checkout),quickstart=path.join(root,config.quickstartDirectory);
+try{await access(path.join(checkout,".git"));}catch{throw new Error(`official Quickstart is missing; run: git clone ${config.repository} ${config.checkout}`);}
+const remote=spawnSync("git",["-C",checkout,"config","--get","remote.origin.url"],{encoding:"utf8"}),head=spawnSync("git",["-C",checkout,"rev-parse","HEAD"],{encoding:"utf8"});if(remote.status!==0||remote.stdout.trim()!==config.repository)throw new Error("Quickstart checkout is not the configured Digital Asset repository");if(head.status!==0||head.stdout.trim()!==config.commit)throw new Error(`Quickstart must be pinned to ${config.commit}`);
+const build=spawnSync("node",["scripts/run-daml.mjs","build"],{cwd:root,stdio:"inherit",shell:process.platform==="win32"});if(build.status!==0)throw new Error("InterWeave DAR build failed");
+const dar=path.join(root,"contracts/daml/.daml/dist/interweave-canton-0.1.0.dar"),override=path.join(root,"infra/canton-localnet/interweave.override.yaml");await access(dar);await access(path.join(quickstart,"Makefile"));
+const make=spawnSync("make",["--version"],{encoding:"utf8",shell:process.platform==="win32"}),docker=spawnSync("docker",["version","--format","{{.Client.Version}}"],{encoding:"utf8",shell:process.platform==="win32"}),dockerVersion=docker.stdout.trim(),dockerMajor=Number(dockerVersion.split(".")[0]);
+console.log(JSON.stringify({status:"PREPARED",quickstart,commit:config.commit,dar,setupRequired:!await exists(path.join(quickstart,".env.local")),dockerStarted:false,prerequisites:{makeAvailable:make.status===0,dockerClientVersion:dockerVersion||null,dockerClientSupported:Number.isFinite(dockerMajor)&&dockerMajor>=27,minimumDockerClient:"27.0.0",minimumCompose:"2.27.0",recommendedDockerMemory:"8 GB"},commands:{shell:"Run setup/start from WSL, Git Bash, or another environment with GNU Make",setup:`cd ${quote(quickstart)} && make setup`,start:`cd ${quote(quickstart)} && INTERWEAVE_DAR_PATH=${quote(dar)} make start DOCKER_COMPOSE_OBSERVABILITY_FILES=\"-f ${override}\"`,health:"npm run canton-localnet:health"}},null,2));
+async function exists(file){try{await access(file);return true;}catch{return false;}}function quote(value){return value.includes(" ")?`\"${value}\"`:value;}

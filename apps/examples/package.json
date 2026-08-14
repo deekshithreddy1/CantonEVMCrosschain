@@ -1,0 +1,8 @@
+{
+  "name": "@interweave/examples",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": { "build": "tsc -p tsconfig.json", "check": "tsc -p tsconfig.json --noEmit", "test": "npm run build && node --test dist/*.test.js", "start": "npm run build && node dist/index.js" },
+  "dependencies": { "@interweave/core": "0.1.0" }
+}

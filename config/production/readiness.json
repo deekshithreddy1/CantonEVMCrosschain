@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "environment": "production",
+  "automaticPromotion": false,
+  "gates": [
+    { "id": "independent-security-review", "status": "PENDING", "evidence": [] },
+    { "id": "smart-contract-audit", "status": "PENDING", "evidence": [] },
+    { "id": "daml-authorization-review", "status": "PENDING", "evidence": [] },
+    { "id": "cross-network-protocol-review", "status": "PENDING", "evidence": [] },
+    { "id": "key-management-review", "status": "PENDING", "evidence": [] },
+    { "id": "operational-runbooks", "status": "EVIDENCED", "evidence": ["docs/operations/runbooks.md"] },
+    { "id": "incident-response", "status": "EVIDENCED", "evidence": ["docs/operations/incident-response.md"] },
+    { "id": "backup-restore-test", "status": "PENDING", "evidence": [] },
+    { "id": "reconciliation-procedure", "status": "EVIDENCED", "evidence": ["docs/operations/runbooks.md#reconciliation"] },
+    { "id": "network-outage-procedure", "status": "EVIDENCED", "evidence": ["docs/operations/runbooks.md#network-outage"] },
+    { "id": "validator-compromise-procedure", "status": "EVIDENCED", "evidence": ["docs/operations/runbooks.md#validator-compromise"] },
+    { "id": "contract-pause-procedure", "status": "EVIDENCED", "evidence": ["docs/operations/runbooks.md#contract-and-route-pause"] },
+    { "id": "upgrade-governance", "status": "EVIDENCED", "evidence": ["docs/operations/upgrade-governance.md"] },
+    { "id": "slos", "status": "EVIDENCED", "evidence": ["docs/operations/slos.md"] },
+    { "id": "monitoring", "status": "EVIDENCED", "evidence": ["infra/observability/interweave-dashboard.json"] },
+    { "id": "alerts", "status": "EVIDENCED", "evidence": ["infra/observability/alerts.yaml"] },
+    { "id": "live-testnet-qualification", "status": "PENDING", "evidence": [] }
+  ]
+}
